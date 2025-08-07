@@ -1,0 +1,16 @@
+.file-format-info {
+  margin-top: var(--gutter-h);
+  padding: var(--gutter-h);
+  border: 1px solid var(--theme-elevation-200);
+  border-radius: var(--border-radius);
+  background: var(--theme-elevation-50);
+
+  &__format {
+    margin-bottom: var(--gutter-h-s);
+  }
+
+  &__info {
+    color: var(--theme-text-dim);
+    font-style: italic;
+  }
+}

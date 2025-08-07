@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
+    
     "baseUrl": ".",
     "lib": [
       "DOM",
       "DOM.Iterable",
       "ES2022"
     ],
-    "rootDir": "./",
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,

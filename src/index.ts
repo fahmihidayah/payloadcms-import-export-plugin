@@ -1,113 +1,208 @@
-import type { CollectionSlug, Config } from 'payload'
+import type { Config, FlattenedField } from 'payload'
 
-import { customEndpointHandler } from './endpoints/customEndpointHandler.js'
+import { addDataAndFileToRequest, deepMergeSimple, flattenTopLevelFields } from 'payload'
 
-export type ImportPluginConfig = {
-  /**
-   * List of collections to add a custom field
-   */
-  collections?: Partial<Record<CollectionSlug, true>>
-  disabled?: boolean
-}
+import type { PluginDefaultTranslationsObject } from './translations/types.js'
+import type { ImportExportPluginConfig, ToCSVFunction } from './types.js'
 
-export const importPlugin =
-  (pluginOptions: ImportPluginConfig) =>
+import { flattenObject } from './export/flattenObject.js'
+import { getCreateCollectionExportTask } from './export/getCreateExportCollectionTask.js'
+import { getCustomFieldFunctions } from './export/getCustomFieldFunctions.js'
+import { getSelect } from './export/getSelect.js'
+import { getExportCollection } from './getExportCollection.js'
+import { getImportCollection } from './getImportCollection.js'
+import { translations } from './translations/index.js'
+import { getFlattenedFieldKeys } from './utilities/getFlattenedFieldKeys.js'
+
+export const importExportPlugin =
+  (pluginConfig: ImportExportPluginConfig) =>
   (config: Config): Config => {
-    if (!config.collections) {
-      config.collections = []
+    const exportCollection = getExportCollection({ config, pluginConfig })
+    const importCollection = getImportCollection({ config, pluginConfig })
+    
+    if (config.collections) {
+      config.collections.push(exportCollection, importCollection)
+    } else {
+      config.collections = [exportCollection, importCollection]
     }
 
-    config.collections.push({
-      slug: 'plugin-collection',
-      fields: [
-        {
-          name: 'id',
-          type: 'text',
-        },
-      ],
-    })
-
-    if (pluginOptions.collections) {
-      for (const collectionSlug in pluginOptions.collections) {
-        const collection = config.collections.find(
-          (collection) => collection.slug === collectionSlug,
-        )
-
-        if (collection) {
-          collection.fields.push({
-            name: 'addedByPlugin',
-            type: 'text',
-            admin: {
-              position: 'sidebar',
-            },
-          })
-        }
-      }
-    }
-
-    /**
-     * If the plugin is disabled, we still want to keep added collections/fields so the database schema is consistent which is important for migrations.
-     * If your plugin heavily modifies the database schema, you may want to remove this property.
-     */
-    if (pluginOptions.disabled) {
-      return config
-    }
-
-    if (!config.endpoints) {
-      config.endpoints = []
-    }
-
-    if (!config.admin) {
-      config.admin = {}
-    }
-
-    if (!config.admin.components) {
-      config.admin.components = {}
-    }
-
-    if (!config.admin.components.beforeDashboard) {
-      config.admin.components.beforeDashboard = []
-    }
-
-    config.admin.components.beforeDashboard.push(
-      `import-plugin/client#BeforeDashboardClient`,
-    )
-    config.admin.components.beforeDashboard.push(
-      `import-plugin/rsc#BeforeDashboardServer`,
+    // inject custom import export provider
+    config.admin = config.admin || {}
+    config.admin.components = config.admin.components || {}
+    config.admin.components.providers = config.admin.components.providers || []
+    config.admin.components.providers.push(
+      'import-plugin/rsc#ImportExportProvider',
     )
 
-    config.endpoints.push({
-      handler: customEndpointHandler,
-      method: 'get',
-      path: '/my-plugin-endpoint',
-    })
+    // inject the createExport job into the config
+    if (!config.jobs) {
+      config.jobs = { tasks: [] }
+    } else if (!Array.isArray(config.jobs.tasks)) {
+      config.jobs.tasks = []
+    }
+    config.jobs.tasks.push(getCreateCollectionExportTask(config, pluginConfig))
 
-    const incomingOnInit = config.onInit
+    let collectionsToUpdate = config.collections
 
-    config.onInit = async (payload) => {
-      // Ensure we are executing any existing onInit functions before running our own.
-      if (incomingOnInit) {
-        await incomingOnInit(payload)
+    const usePluginCollections = pluginConfig.collections && pluginConfig.collections?.length > 0
+
+    if (usePluginCollections) {
+      collectionsToUpdate = config.collections?.filter((collection) => {
+        return pluginConfig.collections?.includes(collection.slug)
+      })
+    }
+
+    collectionsToUpdate.forEach((collection) => {
+      if (!collection.admin) {
+        collection.admin = { components: { listMenuItems: [] } }
       }
-
-      const { totalDocs } = await payload.count({
-        collection: 'plugin-collection',
-        where: {
-          id: {
-            equals: 'seeded-by-plugin',
-          },
+      const components = collection.admin.components || {}
+      if (!components.listMenuItems) {
+        components.listMenuItems = []
+      }
+      components.listMenuItems.push({
+        clientProps: {
+          exportCollectionSlug: exportCollection.slug,
         },
+        path: 'import-plugin/rsc#ExportListMenuItem',
+      })
+      components.listMenuItems.push({
+        clientProps: {
+          importCollectionSlug: importCollection.slug,
+        },
+        path: 'import-plugin/rsc#ImportListMenuItem',
       })
 
-      if (totalDocs === 0) {
-        await payload.create({
-          collection: 'plugin-collection',
-          data: {
-            id: 'seeded-by-plugin',
-          },
-        })
+      // Flatten top-level fields to expose nested fields for export config
+      const flattenedFields = flattenTopLevelFields(collection.fields, true)
+
+      // Find fields explicitly marked as disabled for import/export
+      const disabledFieldAccessors = flattenedFields
+        .filter((field) => field.custom?.['plugin-import-export']?.disabled)
+        // .map((field) => field?.accessor || field.name)
+        .map(field => field.name)
+
+      // Store disabled field accessors in the admin config for use in the UI
+      collection.admin.custom = {
+        ...(collection.admin.custom || {}),
+        'plugin-import-export': {
+          ...(collection.admin.custom?.['plugin-import-export'] || {}),
+          disabledFields: disabledFieldAccessors,
+        },
       }
+
+      collection.admin.components = components
+    })
+
+    if (!config.i18n) {
+      config.i18n = {}
+    }
+
+    // config.i18n.translations = deepMergeSimple(translations, config.i18n?.translations ?? {})
+
+    // Inject custom REST endpoints into the config
+    config.endpoints = config.endpoints || []
+    config.endpoints.push({
+      handler: async (req) => {
+        await addDataAndFileToRequest(req)
+
+        const { collectionSlug, draft, fields, limit, locale, sort, where } = req.data as {
+          collectionSlug: string
+          draft?: 'no' | 'yes'
+          fields?: string[]
+          limit?: number
+          locale?: string
+          sort?: any
+          where?: any
+        }
+
+        const collection = req.payload.collections[collectionSlug]
+        if (!collection) {
+          return Response.json(
+            { error: `Collection with slug ${collectionSlug} not found` },
+            { status: 400 },
+          )
+        }
+
+        const select = Array.isArray(fields) && fields.length > 0 ? getSelect(fields) : undefined
+
+        const result = await req.payload.find({
+          collection: collectionSlug,
+          depth: 1,
+          draft: draft === 'yes',
+          limit: limit && limit > 10 ? 10 : limit,
+          locale,
+          overrideAccess: false,
+          req,
+          select,
+          sort,
+          where,
+        })
+
+        const docs = result.docs
+
+        const toCSVFunctions = getCustomFieldFunctions({
+          fields: collection.config.fields as FlattenedField[],
+        })
+
+        const possibleKeys = getFlattenedFieldKeys(collection.config.fields as FlattenedField[])
+
+        const transformed = docs.map((doc) => {
+          const row = flattenObject({
+            doc,
+            fields,
+            toCSVFunctions,
+          })
+
+          for (const key of possibleKeys) {
+            if (!(key in row)) {
+              row[key] = null
+            }
+          }
+
+          return row
+        })
+
+        return Response.json({
+          docs: transformed,
+          totalDocs: result.totalDocs,
+        })
+      },
+      method: 'post',
+      path: '/preview-data',
+    })
+
+    /**
+     * Merge plugin translations
+     */
+    const simplifiedTranslations = Object.entries(translations).reduce(
+      (acc, [key, value]) => {
+        acc[key] = value?.translations
+        return acc
+      },
+      {} as Record<string, PluginDefaultTranslationsObject>,
+    )
+
+    config.i18n = {
+      ...config.i18n,
+      translations: deepMergeSimple(simplifiedTranslations, config.i18n?.translations ?? {}),
     }
 
     return config
   }
+
+declare module 'payload' {
+  export interface FieldCustom {
+    'plugin-import-export'?: {
+      /**
+       * When `true` the field is **completely excluded** from the import-export plugin:
+       * - It will not appear in the “Fields to export” selector.
+       * - It is hidden from the preview list when no specific fields are chosen.
+       * - Its data is omitted from the final CSV / JSON export.
+       * @default false
+       */
+      disabled?: boolean
+      toCSV?: ToCSVFunction
+    }
+  }
+}

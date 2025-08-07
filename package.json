@@ -6,30 +6,40 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./src/exports/index.ts",
-      "types": "./src/exports/index.ts",
-      "default": "./src/exports/index.ts"
+      "import": "./src/index.ts",
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
     },
-    "./client": {
-      "import": "./src/exports/client.ts",
-      "types": "./src/exports/client.ts",
-      "default": "./src/exports/client.ts"
+    "./types": {
+      "import": "./src/exports/types.ts",
+      "types": "./src/exports/types.ts",
+      "default": "./src/exports/types.ts"
     },
     "./rsc": {
       "import": "./src/exports/rsc.ts",
       "types": "./src/exports/rsc.ts",
       "default": "./src/exports/rsc.ts"
+    },
+    "./translations/languages/all": {
+      "import": "./src/translations/index.ts",
+      "types": "./src/translations/index.ts",
+      "default": "./src/translations/index.ts"
+    },
+    "./translations/languages/*": {
+      "import": "./src/translations/languages/*.ts",
+      "types": "./src/translations/languages/*.ts",
+      "default": "./src/translations/languages/*.ts"
     }
   },
-  "main": "./src/exports/index.ts",
-  "types": "./src/exports/index.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "files": [
     "dist"
   ],
   "scripts": {
     "build": "pnpm copyfiles && pnpm build:types && pnpm build:swc",
     "build:swc": "swc ./src -d ./dist --config-file .swcrc --strip-leading-paths",
-    "build:types": "tsc --outDir dist --rootDir ./src",
+    "build:types": "tsc --emitDeclarationOnly --outDir dist",
     "clean": "rimraf {dist,*.tsbuildinfo}",
     "copyfiles": "copyfiles -u 1 \"src/**/*.{html,css,scss,ttf,woff,woff2,eot,svg,jpg,png,json}\" dist/",
     "dev": "next dev dev --turbo",
@@ -52,6 +62,7 @@
     "@payloadcms/db-sqlite": "3.37.0",
     "@payloadcms/eslint-config": "3.9.0",
     "@payloadcms/next": "3.37.0",
+    "@payloadcms/translations": "3.37.0",
     "@payloadcms/richtext-lexical": "3.37.0",
     "@payloadcms/ui": "3.37.0",
     "@playwright/test": "^1.52.0",
@@ -78,7 +89,10 @@
     "sort-package-json": "^2.10.0",
     "typescript": "5.7.3",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.1.2"
+    "vitest": "^3.1.2",
+    "csv-parse": "^5.6.0",
+    "csv-stringify": "^6.5.2"
+    
   },
   "peerDependencies": {
     "payload": "^3.37.0"
@@ -90,23 +104,33 @@
   "publishConfig": {
     "exports": {
       ".": {
-        "import": "./dist/exports/index.js",
-        "types": "./dist/exports/index.d.ts",
-        "default": "./dist/exports/index.js"
+        "import": "./dist/index.js",
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
       },
-      "./client": {
-        "import": "./dist/exports/client.js",
-        "types": "./dist/exports/client.d.ts",
-        "default": "./dist/exports/client.js"
+      "./types": {
+        "import": "./dist/exports/types.js",
+        "types": "./dist/exports/types.d.ts",
+        "default": "./dist/exports/types.js"
       },
       "./rsc": {
         "import": "./dist/exports/rsc.js",
         "types": "./dist/exports/rsc.d.ts",
         "default": "./dist/exports/rsc.js"
+      },
+      "./translations/languages/all": {
+        "import": "./dist/translations/index.js",
+        "types": "./dist/translations/index.d.ts",
+        "default": "./dist/translations/index.js"
+      },
+      "./translations/languages/*": {
+        "import": "./dist/translations/languages/*.js",
+        "types": "./dist/translations/languages/*.d.ts",
+        "default": "./dist/translations/languages/*.js"
       }
     },
-    "main": "./dist/exports/index.js",
-    "types": "./dist/exports/index.d.ts"
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

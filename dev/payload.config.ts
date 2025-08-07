@@ -3,11 +3,12 @@ import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { MongoMemoryReplSet } from 'mongodb-memory-server'
 import path from 'path'
 import { buildConfig } from 'payload'
-import { importPlugin } from 'import-plugin'
 import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
-import { testEmailAdapter } from './helpers/testEmailAdapter.js'
+// import { testEmailAdapter } from './helpers/testEmailAdapter.js'
+// import { seed } from './seed.js'
+import { importExportPlugin } from 'import-plugin'
 import { seed } from './seed.js'
 
 const filename = fileURLToPath(import.meta.url)
@@ -38,7 +39,17 @@ const buildConfigWithMemoryDB = async () => {
     collections: [
       {
         slug: 'posts',
-        fields: [],
+        fields: [
+          {
+            name : 'title',
+            type : 'text',
+
+          },
+          {
+            name : 'content',
+            type : 'richText'
+          }
+        ],
       },
       {
         slug: 'media',
@@ -47,21 +58,32 @@ const buildConfigWithMemoryDB = async () => {
           staticDir: path.resolve(dirname, 'media'),
         },
       },
+      {
+        slug : "tag",
+        fields : [
+          {
+            name : 'title',
+            type : 'text'
+          },
+          {
+            name : 'description',
+            type : 'text'
+          }
+        ]
+      }
     ],
     db: mongooseAdapter({
       ensureIndexes: true,
       url: process.env.DATABASE_URI || '',
     }),
     editor: lexicalEditor(),
-    email: testEmailAdapter,
+    // email: testEmailAdapter,
     onInit: async (payload) => {
       await seed(payload)
     },
     plugins: [
-      importPlugin({
-        collections: {
-          posts: true,
-        },
+      importExportPlugin({
+        collections: [ 'tag'] // Only these collections will have import/export functionality
       }),
     ],
     secret: process.env.PAYLOAD_SECRET || 'test-secret_key',
