@@ -1,218 +1,406 @@
-# Payload Plugin Template
+# Payload CMS Import/Export Plugin
 
-A template repo to create a [Payload CMS](https://payloadcms.com) plugin.
+A comprehensive Payload CMS plugin that enables seamless import and export of collection data with support for CSV and JSON formats, featuring advanced field mapping, duplicate handling, and batch processing capabilities.
 
-Payload is built with a robust infrastructure intended to support Plugins with ease. This provides a simple, modular, and reusable way for developers to extend the core capabilities of Payload.
+## ✨ Features
 
-To build your own Payload plugin, all you need is:
+- **Multiple Format Support**: Import/export data in CSV and JSON formats
+- **Smart Field Mapping**: Automatic field mapping with manual override options
+- **Duplicate Handling**: Choose to skip, replace, or update existing records
+- **Batch Processing**: Handle large datasets efficiently with job queuing
+- **Field Selection**: Choose specific fields to export or import
+- **Multi-language Support**: Built-in translations for 30+ languages
+- **Preview Mode**: Preview data before importing
+- **Error Handling**: Comprehensive error reporting and validation
+- **Permission Integration**: Respects Payload's access control system
 
-- An understanding of the basic Payload concepts
-- And some JavaScript/Typescript experience
+## 📦 Installation
 
-## Background
+```bash
+npm install payloadcms-import-export-plugin
+# or
+pnpm add payloadcms-import-export-plugin
+# or
+yarn add payloadcms-import-export-plugin
+```
 
-Here is a short recap on how to integrate plugins with Payload, to learn more visit the [plugin overview page](https://payloadcms.com/docs/plugins/overview).
+## 🚀 Quick Start
 
-### How to install a plugin
+### 1. Add the Plugin to Your Payload Config
 
-To install any plugin, simply add it to your payload.config() in the Plugin array.
+```typescript
+import { buildConfig } from 'payload'
+import { importExportPlugin } from 'payloadcms-import-export-plugin'
 
-```ts
-import myPlugin from 'my-plugin'
-
-export const config = buildConfig({
+export default buildConfig({
+  // ... your existing config
   plugins: [
-    // You can pass options to the plugin
-    myPlugin({
-      enabled: true,
+    importExportPlugin({
+      // Enable for all collections
+      collections: [], // Empty array means all collections
+      
+      // Or specify specific collections
+      // collections: ['users', 'posts', 'categories']
     }),
   ],
 })
 ```
 
-### Initialization
+### 2. Configure Collections (Optional)
 
-The initialization process goes in the following order:
+You can disable import/export for specific fields by adding custom configuration:
 
-1. Incoming config is validated
-2. **Plugins execute**
-3. Default options are integrated
-4. Sanitization cleans and validates data
-5. Final config gets initialized
+```typescript
+import type { CollectionConfig } from 'payload'
 
-## Building the Plugin
-
-When you build a plugin, you are purely building a feature for your project and then abstracting it outside of the project.
-
-### Template Files
-
-In the Payload [plugin template](https://github.com/payloadcms/payload/tree/main/templates/plugin), you will see a common file structure that is used across all plugins:
-
-1. root folder
-2. /src folder
-3. /dev folder
-
-#### Root
-
-In the root folder, you will see various files that relate to the configuration of the plugin. We set up our environment in a similar manner in Payload core and across other projects, so hopefully these will look familiar:
-
-- **README**.md\* - This contains instructions on how to use the template. When you are ready, update this to contain instructions on how to use your Plugin.
-- **package**.json\* - Contains necessary scripts and dependencies. Overwrite the metadata in this file to describe your Plugin.
-- .**eslint**.config.js - Eslint configuration for reporting on problematic patterns.
-- .**gitignore** - List specific untracked files to omit from Git.
-- .**prettierrc**.json - Configuration for Prettier code formatting.
-- **tsconfig**.json - Configures the compiler options for TypeScript
-- .**swcrc** - Configuration for SWC, a fast compiler that transpiles and bundles TypeScript.
-- **vitest**.config.js - Config file for Vitest, defining how tests are run and how modules are resolved
-
-**IMPORTANT\***: You will need to modify these files.
-
-#### Dev
-
-In the dev folder, you’ll find a basic payload project, created with `npx create-payload-app` and the blank template.
-
-**IMPORTANT**: Make a copy of the `.env.example` file and rename it to `.env`. Update the `DATABASE_URI` to match the database you are using and your plugin name. Update `PAYLOAD_SECRET` to a unique string.
-**You will not be able to run `pnpm/yarn dev` until you have created this `.env` file.**
-
-`myPlugin` has already been added to the `payload.config()` file in this project.
-
-```ts
-plugins: [
-  myPlugin({
-    collections: {
-      posts: true,
+export const Posts: CollectionConfig = {
+  slug: 'posts',
+  fields: [
+    {
+      name: 'title',
+      type: 'text',
+      required: true,
     },
-  }),
-]
+    {
+      name: 'content',
+      type: 'textarea',
+    },
+    {
+      name: 'internalId',
+      type: 'text',
+      custom: {
+        'plugin-import-export': {
+          disabled: true, // This field won't be available for import/export
+        },
+      },
+    },
+  ],
+}
 ```
 
-Later when you rename the plugin or add additional options, **make sure to update it here**.
+## 📖 Usage Guide
 
-You may wish to add collections or expand the test project depending on the purpose of your plugin. Just make sure to keep this dev environment as simplified as possible - users should be able to install your plugin without additional configuration required.
+### Exporting Data
 
-When you’re ready to start development, initiate the project with `pnpm/npm/yarn dev` and pull up [http://localhost:3000](http://localhost:3000) in your browser.
+1. **Navigate to Collection**: Go to any collection where the plugin is enabled
+2. **Click Export**: Find the "Export" option in the collection list menu
+3. **Configure Export**:
+   - Select target collection
+   - Choose export format (CSV or JSON)
+   - Select specific fields (optional)
+   - Configure sorting and filtering
+4. **Download**: Click "Export" to generate and download your file
 
-#### Src
+#### Export Configuration Options
 
-Now that we have our environment setup and we have a dev project ready to - it’s time to build the plugin!
+```typescript
+{
+  collection: 'posts',           // Target collection
+  format: 'csv',                 // 'csv' or 'json'
+  fields: ['title', 'content'],  // Specific fields (optional)
+  where: { status: 'published' }, // Filter criteria (optional)
+  sort: 'createdAt',             // Sort field (optional)
+  limit: 1000,                   // Max records (optional)
+}
+```
 
-**index.ts**
+### Importing Data
 
-The essence of a Payload plugin is simply to extend the payload config - and that is exactly what we are doing in this file.
+1. **Navigate to Collection**: Go to any collection where the plugin is enabled
+2. **Click Import**: Find the "Import" option in the collection list menu
+3. **Upload File**: Select your CSV or JSON file
+4. **Configure Import**:
+   - Select target collection
+   - Choose duplicate handling strategy
+   - Map fields if needed
+5. **Preview**: Review the data preview
+6. **Import**: Execute the import process
 
-```ts
-export const myPlugin =
-  (pluginOptions: MyPluginConfig) =>
-  (config: Config): Config => {
-    // do cool stuff with the config here
+#### Duplicate Handling Strategies
 
-    return config
+- **Skip Existing**: Leave existing records unchanged, only add new ones
+- **Replace Existing**: Update existing records with new data from the file
+- **Create Duplicates**: Always create new records (ignores duplicates)
+
+#### Supported File Formats
+
+**CSV Format:**
+```csv
+name,email,age,isActive
+John Doe,john@example.com,30,true
+Jane Smith,jane@example.com,25,false
+```
+
+**JSON Format (Array):**
+```json
+[
+  {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "age": 30,
+    "isActive": true
+  },
+  {
+    "name": "Jane Smith",
+    "email": "jane@example.com",
+    "age": 25,
+    "isActive": false
   }
-```
-
-First, we receive the existing payload config along with any plugin options.
-
-From here, you can extend the config as you wish.
-
-Finally, you return the config and that is it!
-
-##### Spread Syntax
-
-Spread syntax (or the spread operator) is a feature in JavaScript that uses the dot notation **(...)** to spread elements from arrays, strings, or objects into various contexts.
-
-We are going to use spread syntax to allow us to add data to existing arrays without losing the existing data. It is crucial to spread the existing data correctly – else this can cause adverse behavior and conflicts with Payload config and other plugins.
-
-Let’s say you want to build a plugin that adds a new collection:
-
-```ts
-config.collections = [
-  ...(config.collections || []),
-  // Add additional collections here
 ]
 ```
 
-First we spread the `config.collections` to ensure that we don’t lose the existing collections, then you can add any additional collections just as you would in a regular payload config.
-
-This same logic is applied to other properties like admin, hooks, globals:
-
-```ts
-config.globals = [
-  ...(config.globals || []),
-  // Add additional globals here
-]
-
-config.hooks = {
-  ...(incomingConfig.hooks || {}),
-  // Add additional hooks here
+**JSON Format (Single Object):**
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "age": 30,
+  "isActive": true
 }
 ```
 
-Some properties will be slightly different to extend, for instance the onInit property:
+## ⚙️ Configuration
 
-```ts
-import { onInitExtension } from './onInitExtension' // example file
+### Plugin Options
 
-config.onInit = async (payload) => {
-  if (incomingConfig.onInit) await incomingConfig.onInit(payload)
-  // Add additional onInit code by defining an onInitExtension function
-  onInitExtension(pluginOptions, payload)
-}
-```
-
-If you wish to add to the onInit, you must include the **async/await**. We don’t use spread syntax in this case, instead you must await the existing `onInit` before running additional functionality.
-
-In the template, we have stubbed out some addition `onInit` actions that seeds in a document to the `plugin-collection`, you can use this as a base point to add more actions - and if not needed, feel free to delete it.
-
-##### Types.ts
-
-If your plugin has options, you should define and provide types for these options.
-
-```ts
-export type MyPluginConfig = {
+```typescript
+export interface ImportExportPluginConfig {
   /**
-   * List of collections to add a custom field
+   * Collections to enable the plugin for
+   * Empty array or undefined means all collections
    */
-  collections?: Partial<Record<CollectionSlug, true>>
+  collections?: string[]
+  
   /**
-   * Disable the plugin
+   * Disable the plugin entirely
+   * @default false
    */
   disabled?: boolean
+  
+  /**
+   * Custom export functions for specific field types
+   */
+  customExportFunctions?: Record<string, ToCSVFunction>
+  
+  /**
+   * Maximum file size for imports (in bytes)
+   * @default 10485760 (10MB)
+   */
+  maxFileSize?: number
+  
+  /**
+   * Enable debug logging
+   * @default false
+   */
+  debug?: boolean
 }
 ```
 
-If possible, include JSDoc comments to describe the options and their types. This allows a developer to see details about the options in their editor.
+### Field-Level Configuration
 
-##### Testing
+Control import/export behavior at the field level:
 
-Having a test suite for your plugin is essential to ensure quality and stability. **Vitest** is a fast, modern testing framework that works seamlessly with Vite and supports TypeScript out of the box.
+```typescript
+{
+  name: 'sensitiveField',
+  type: 'text',
+  custom: {
+    'plugin-import-export': {
+      disabled: true, // Exclude from import/export
+      toCSV: (value, field) => {
+        // Custom export transformation
+        return value ? '***' : ''
+      }
+    }
+  }
+}
+```
 
-Vitest organizes tests into test suites and cases, similar to other testing frameworks. We recommend creating individual tests based on the expected behavior of your plugin from start to finish.
+### Custom Export Functions
 
-Writing tests with Vitest is very straightforward, and you can learn more about how it works in the [Vitest documentation.](https://vitest.dev/)
+Define custom export transformations for complex field types:
 
-For this template, we stubbed out `int.spec.ts` in the `dev` folder where you can write your tests.
-
-```ts
-describe('Plugin tests', () => {
-  // Create tests to ensure expected behavior from the plugin
-  it('some condition that must be met', () => {
-   // Write your test logic here
-   expect(...)
-  })
+```typescript
+importExportPlugin({
+  customExportFunctions: {
+    relationship: (value, field) => {
+      // Transform relationship fields
+      return Array.isArray(value) 
+        ? value.map(v => typeof v === 'object' ? v.id : v).join(',')
+        : typeof value === 'object' ? value.id : value
+    },
+    upload: (value, field) => {
+      // Transform upload fields
+      return typeof value === 'object' ? value.filename : value
+    }
+  }
 })
 ```
 
-## Best practices
+## 🔧 Advanced Usage
 
-With this tutorial and the plugin template, you should have everything you need to start building your own plugin.
-In addition to the setup, here are other best practices aim we follow:
+### Programmatic Export
 
-- **Providing an enable / disable option:** For a better user experience, provide a way to disable the plugin without uninstalling it. This is especially important if your plugin adds additional webpack aliases, this will allow you to still let the webpack run to prevent errors.
-- **Include tests in your GitHub CI workflow**: If you’ve configured tests for your package, integrate them into your workflow to run the tests each time you commit to the plugin repository. Learn more about [how to configure tests into your GitHub CI workflow.](https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs)
-- **Publish your finished plugin to NPM**: The best way to share and allow others to use your plugin once it is complete is to publish an NPM package. This process is straightforward and well documented, find out more [creating and publishing a NPM package here.](https://docs.npmjs.com/creating-and-publishing-scoped-public-packages/).
-- **Add payload-plugin topic tag**: Apply the tag **payload-plugin **to your GitHub repository. This will boost the visibility of your plugin and ensure it gets listed with [existing payload plugins](https://github.com/topics/payload-plugin).
-- **Use [Semantic Versioning](https://semver.org/) (SemVar)** - With the SemVar system you release version numbers that reflect the nature of changes (major, minor, patch). Ensure all major versions reference their Payload compatibility.
+```typescript
+import { exportCollection } from 'payloadcms-import-export-plugin/rsc'
 
-# Questions
+// Export data programmatically
+const exportData = await exportCollection({
+  collection: 'posts',
+  format: 'json',
+  fields: ['title', 'content', 'status'],
+  where: { status: 'published' },
+  req, // Payload request object
+})
+```
 
-Please contact [Payload](mailto:dev@payloadcms.com) with any questions about using this plugin template.
+### Programmatic Import
+
+```typescript
+import { importCollection } from 'payloadcms-import-export-plugin/rsc'
+
+// Import data programmatically
+const result = await importCollection({
+  collection: 'posts',
+  data: [
+    { title: 'Post 1', content: 'Content 1' },
+    { title: 'Post 2', content: 'Content 2' },
+  ],
+  duplicateHandling: 'skip',
+  req, // Payload request object
+})
+
+console.log(result) // { imported: 2, updated: 0, skipped: 0, errors: [] }
+```
+
+### Error Handling
+
+The plugin provides comprehensive error reporting:
+
+```typescript
+{
+  success: false,
+  imported: 5,
+  updated: 2,
+  skipped: 1,
+  errors: [
+    {
+      row: 3,
+      field: 'email',
+      message: 'Email is required',
+      value: null
+    }
+  ],
+  processedAt: '2024-01-15T10:30:00Z'
+}
+```
+
+## 🌐 Internationalization
+
+The plugin includes built-in translations for 30+ languages. To use specific translations:
+
+```typescript
+// Import specific language
+import { translations } from 'payloadcms-import-export-plugin/translations/languages/en'
+
+// Import all languages
+import { allTranslations } from 'payloadcms-import-export-plugin/translations/languages/all'
+```
+
+Supported languages include: Arabic, Chinese, English, French, German, Japanese, Spanish, and many more.
+
+## 🔒 Security Considerations
+
+- **File Upload Security**: Only CSV and JSON files are accepted
+- **Permission Integration**: Respects Payload's access control system
+- **Data Validation**: All imported data goes through Payload's validation
+- **Size Limits**: Configurable file size limits prevent abuse
+- **Sanitization**: Input data is sanitized before processing
+
+## 🧪 Testing
+
+The plugin includes comprehensive test coverage:
+
+```bash
+# Run all tests
+pnpm test
+
+# Run integration tests
+pnpm test:int
+
+# Run end-to-end tests
+pnpm test:e2e
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Import fails with "Collection not found":**
+- Verify the collection slug is correct
+- Ensure you have access permissions to the collection
+
+**CSV parsing errors:**
+- Check that your CSV has proper headers
+- Ensure consistent column count across all rows
+- Verify special characters are properly escaped
+
+**Memory issues with large files:**
+- Use smaller batch sizes
+- Consider splitting large files into smaller chunks
+- Increase Node.js memory limit: `node --max-old-space-size=8192`
+
+**Field mapping issues:**
+- Ensure field names in your import file match exactly
+- Check for typos in field names
+- Verify field types are compatible
+
+### Debug Mode
+
+Enable debug logging for troubleshooting:
+
+```typescript
+importExportPlugin({
+  debug: true, // Enables detailed logging
+})
+```
+
+## 📝 Contributing
+
+Contributions are welcome! Please read our contributing guidelines and submit pull requests to our GitHub repository.
+
+### Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/payloadcms-import-export-plugin.git
+
+# Install dependencies
+pnpm install
+
+# Start development server
+pnpm dev
+
+# Run tests
+pnpm test
+```
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built for the amazing [Payload CMS](https://payloadcms.com) community
+- Inspired by the need for better data migration tools
+- Special thanks to all contributors and users
+
+## 📞 Support
+
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/yourusername/payloadcms-import-export-plugin/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/yourusername/payloadcms-import-export-plugin/discussions)
+- 📖 **Documentation**: [GitHub Wiki](https://github.com/yourusername/payloadcms-import-export-plugin/wiki)
+
+---
+
+**Made with ❤️ for the Payload CMS community**

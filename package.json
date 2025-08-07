@@ -1,7 +1,7 @@
 {
   "name": "payloadcms-import-export-plugin",
-  "version": "1.0.1",
-  "description": "Import and export data for Payload CMS collections with support for CSV, JSON formats",
+  "version": "1.1.1",
+  "description": "A comprehensive Payload CMS plugin that enables seamless import and export of collection data with support for CSV and JSON formats, featuring advanced field mapping, duplicate handling, and batch processing capabilities.",
   "license": "MIT",
   "author": "fahmi <m.fahmi.hidayah@gmail.com>",
   "keywords": [
@@ -12,11 +12,22 @@
     "export",
     "csv",
     "json",
-    "data-migration"
+    "data-migration",
+    "bulk-import",
+    "data-transfer",
+    "collection-management",
+    "content-management",
+    "field-mapping",
+    "batch-processing",
+    "duplicate-handling"
   ],
+  "homepage": "https://github.com/fahmihidayah/payloadcms-import-export-plugin#readme",
+  "bugs": {
+    "url": "https://github.com/fahmihidayah/payloadcms-import-export-plugin/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/payloadcms-import-export-plugin.git"
+    "url": "https://github.com/fahmihidayah/payloadcms-import-export-plugin.git"
   },
   "type": "module",
   "exports": {
