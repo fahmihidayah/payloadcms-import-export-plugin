@@ -31,7 +31,7 @@ export const getExportCollection = ({
     admin: {
       components: {
         edit: {
-          SaveButton: 'import-plugin/rsc#ExportSaveButton',
+          SaveButton: 'payloadcms-import-export-plugin/rsc#ExportSaveButton',
         },
       },
       custom: {

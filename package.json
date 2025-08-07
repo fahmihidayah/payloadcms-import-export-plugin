@@ -1,8 +1,23 @@
 {
-  "name": "import-plugin",
-  "version": "1.0.0",
-  "description": "A blank template to get started with Payload 3.0",
+  "name": "payloadcms-import-export-plugin",
+  "version": "1.0.1",
+  "description": "Import and export data for Payload CMS collections with support for CSV, JSON formats",
   "license": "MIT",
+  "author": "fahmi <m.fahmi.hidayah@gmail.com>",
+  "keywords": [
+    "payload",
+    "payloadcms",
+    "plugin",
+    "import",
+    "export",
+    "csv",
+    "json",
+    "data-migration"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/payloadcms-import-export-plugin.git"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -89,10 +104,7 @@
     "sort-package-json": "^2.10.0",
     "typescript": "5.7.3",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^3.1.2",
-    "csv-parse": "^5.6.0",
-    "csv-stringify": "^6.5.2"
-    
+    "vitest": "^3.1.2"
   },
   "peerDependencies": {
     "payload": "^3.37.0"
@@ -140,5 +152,8 @@
     ]
   },
   "registry": "https://registry.npmjs.org/",
-  "dependencies": {}
+  "dependencies": {
+    "csv-parse": "^5.6.0",
+    "csv-stringify": "^6.5.2"
+  }
 }

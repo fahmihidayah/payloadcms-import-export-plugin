@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url'
 
 // import { testEmailAdapter } from './helpers/testEmailAdapter.js'
 // import { seed } from './seed.js'
-import { importExportPlugin } from 'import-plugin'
+import { importExportPlugin } from 'payloadcms-import-export-plugin'
 import { seed } from './seed.js'
 
 const filename = fileURLToPath(import.meta.url)

@@ -7,7 +7,7 @@ export const getImportFields = (): Field[] => {
       type: 'ui',
       admin: {
         components: {
-          Field: 'import-plugin/rsc#FileFormatInfo',
+          Field: 'payloadcms-import-export-plugin/rsc#FileFormatInfo',
         },
       },
     },
@@ -16,7 +16,7 @@ export const getImportFields = (): Field[] => {
       type: 'text',
       admin: {
         components: {
-          Field: 'import-plugin/rsc#ImportCollectionField',
+          Field: 'payloadcms-import-export-plugin/rsc#ImportCollectionField',
         },
         hidden: true,
       },

@@ -19,7 +19,7 @@ export const importExportPlugin =
   (config: Config): Config => {
     const exportCollection = getExportCollection({ config, pluginConfig })
     const importCollection = getImportCollection({ config, pluginConfig })
-    
+
     if (config.collections) {
       config.collections.push(exportCollection, importCollection)
     } else {
@@ -31,7 +31,7 @@ export const importExportPlugin =
     config.admin.components = config.admin.components || {}
     config.admin.components.providers = config.admin.components.providers || []
     config.admin.components.providers.push(
-      'import-plugin/rsc#ImportExportProvider',
+      'payloadcms-import-export-plugin/rsc#ImportExportProvider',
     )
 
     // inject the createExport job into the config
@@ -64,13 +64,13 @@ export const importExportPlugin =
         clientProps: {
           exportCollectionSlug: exportCollection.slug,
         },
-        path: 'import-plugin/rsc#ExportListMenuItem',
+        path: 'payloadcms-import-export-plugin/rsc#ExportListMenuItem',
       })
       components.listMenuItems.push({
         clientProps: {
           importCollectionSlug: importCollection.slug,
         },
-        path: 'import-plugin/rsc#ImportListMenuItem',
+        path: 'payloadcms-import-export-plugin/rsc#ImportListMenuItem',
       })
 
       // Flatten top-level fields to expose nested fields for export config
@@ -80,7 +80,7 @@ export const importExportPlugin =
       const disabledFieldAccessors = flattenedFields
         .filter((field) => field.custom?.['plugin-import-export']?.disabled)
         // .map((field) => field?.accessor || field.name)
-        .map(field => field.name)
+        .map((field) => field.name)
 
       // Store disabled field accessors in the admin config for use in the UI
       collection.admin.custom = {

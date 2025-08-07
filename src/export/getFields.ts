@@ -20,7 +20,7 @@ export const getFields = (config: Config, pluginConfig?: ImportExportPluginConfi
       options: [
         {
           // @ts-expect-error - this is not correctly typed in plugins right now
-          label: ({ t } ) => t('general:allLocales'),
+          label: ({ t }) => t('general:allLocales'),
           value: 'all',
         },
         ...config.localization.locales.map((locale) => ({
@@ -86,7 +86,7 @@ export const getFields = (config: Config, pluginConfig?: ImportExportPluginConfi
               type: 'text',
               admin: {
                 components: {
-                  Field: 'import-plugin/rsc#SortBy',
+                  Field: 'payloadcms-import-export-plugin/rsc#SortBy',
                 },
               },
               // @ts-expect-error - this is not correctly typed in plugins right now
@@ -119,7 +119,7 @@ export const getFields = (config: Config, pluginConfig?: ImportExportPluginConfi
               options: [
                 {
                   // @ts-expect-error - this is not correctly typed in plugins right now
-                  label: ({ t } ) => t('general:yes'),
+                  label: ({ t }) => t('general:yes'),
                   value: 'yes',
                 },
                 {
@@ -147,7 +147,7 @@ export const getFields = (config: Config, pluginConfig?: ImportExportPluginConfi
           type: 'radio',
           admin: {
             components: {
-              Field: 'import-plugin/rsc#SelectionToUseField',
+              Field: 'payloadcms-import-export-plugin/rsc#SelectionToUseField',
             },
           },
           options: [
@@ -173,7 +173,7 @@ export const getFields = (config: Config, pluginConfig?: ImportExportPluginConfi
           type: 'text',
           admin: {
             components: {
-              Field: 'import-plugin/rsc#FieldsToExport',
+              Field: 'payloadcms-import-export-plugin/rsc#FieldsToExport',
             },
           },
           hasMany: true,
@@ -185,7 +185,7 @@ export const getFields = (config: Config, pluginConfig?: ImportExportPluginConfi
           type: 'text',
           admin: {
             components: {
-              Field: 'import-plugin/rsc#CollectionField',
+              Field: 'payloadcms-import-export-plugin/rsc#CollectionField',
             },
             hidden: true,
           },
@@ -215,7 +215,7 @@ export const getFields = (config: Config, pluginConfig?: ImportExportPluginConfi
       type: 'ui',
       admin: {
         components: {
-          Field: 'import-plugin/rsc#Preview',
+          Field: 'payloadcms-import-export-plugin/rsc#Preview',
         },
       },
     },

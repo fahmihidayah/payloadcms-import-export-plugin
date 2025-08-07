@@ -30,7 +30,7 @@ export const getImportCollection = ({
     admin: {
       components: {
         edit: {
-          SaveButton: 'import-plugin/rsc#ImportSaveButton',
+          SaveButton: 'payloadcms-import-export-plugin/rsc#ImportSaveButton',
         },
       },
       group: false,
@@ -53,7 +53,6 @@ export const getImportCollection = ({
 
   // Add import processing logic
   afterChange.push(async ({ doc, operation, req }) => {
-
     console.log('create operation : ', operation)
     if (operation !== 'create') {
       return
@@ -62,10 +61,9 @@ export const getImportCollection = ({
     // Process import asynchronously to avoid blocking the response
     setImmediate(async () => {
       try {
-        
         const { importOptions, targetCollection, url, filename } = doc
 
-        console.log("doc : ", JSON.stringify(doc))
+        console.log('doc : ', JSON.stringify(doc))
 
         if (!url || !targetCollection) {
           console.error('Import failed: Missing file URL or target collection')
@@ -82,17 +80,19 @@ export const getImportCollection = ({
           // Read file directly from the URL
           const fs = await import('fs/promises')
           const path = await import('path')
-          
+
           // The URL is like "/api/imports/file/filename.csv"
-          // The actual file is stored in import-plugin/imports/filename.csv
+          // The actual file is stored in payloadcms-import-export-plugin/imports/filename.csv
           const fileNameFromUrl = decodeURIComponent(url.split('/').pop() || filename)
           const filePath = path.join(process.cwd(), 'imports', fileNameFromUrl)
-          
+
           console.log(`Reading file from: ${filePath}`)
           fileBuffer = await fs.readFile(filePath)
         } catch (fileError) {
           console.error('Error reading uploaded file:', fileError)
-          throw new Error(`Failed to read uploaded file: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`)
+          throw new Error(
+            `Failed to read uploaded file: ${fileError instanceof Error ? fileError.message : 'Unknown error'}`,
+          )
         }
 
         // Process the import
@@ -125,10 +125,9 @@ export const getImportCollection = ({
         })
 
         console.log('Import completed:', result)
-
       } catch (error) {
         console.error('Import processing error:', error)
-        
+
         // Update document with error
         try {
           await req.payload.update({
