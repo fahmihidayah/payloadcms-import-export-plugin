@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url'
 // import { seed } from './seed.js'
 import { importExportPlugin } from 'payloadcms-import-export-plugin'
 import { seed } from './seed.js'
+import { slugField } from './collections/slug/index.js'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -43,6 +44,7 @@ const buildConfigWithMemoryDB = async () => {
           {
             name : 'title',
             type : 'text',
+            
 
           },
           {
@@ -62,7 +64,8 @@ const buildConfigWithMemoryDB = async () => {
             type : "relationship", 
             relationTo : "categories",
             hasMany: true
-          }
+          },
+          ... slugField("title")
         ],
       },
 
