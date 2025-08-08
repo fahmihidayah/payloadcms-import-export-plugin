@@ -48,8 +48,46 @@ const buildConfigWithMemoryDB = async () => {
           {
             name : 'content',
             type : 'richText'
+          },
+          {
+            name : 'tags',
+            type : "relationship",
+            relationTo : "tags",
+            hasMany: true
+          },
+          {
+            name : 'categories',
+            type : "relationship", 
+            relationTo : "categories",
+            hasMany: true
           }
         ],
+      },
+
+      {
+          slug : "announcements",
+          fields : [
+            {
+              name : 'title',
+              type : "text",
+            },
+            {
+              name : "announcement",
+              type: "richText"
+            },
+            {
+              name : 'tags',
+              type : "relationship",
+              relationTo : "tags",
+              hasMany: true
+            },
+            {
+              name : 'categories',
+              type : "relationship", 
+              relationTo : "categories",
+              hasMany: true
+            }
+          ]
       },
       {
         slug: 'media',
@@ -59,7 +97,20 @@ const buildConfigWithMemoryDB = async () => {
         },
       },
       {
-        slug : "tag",
+        slug : 'categories',
+        fields : [
+          {
+            name : 'name',
+            type : 'text'
+          },
+          {
+            name : 'description',
+            type : 'text'
+          }
+        ]
+      },
+      {
+        slug : "tags",
         fields : [
           {
             name : 'title',
@@ -83,7 +134,7 @@ const buildConfigWithMemoryDB = async () => {
     },
     plugins: [
       importExportPlugin({
-        collections: [ 'tag'] // Only these collections will have import/export functionality
+        collections: [ 'tags', 'posts', 'announcements', 'categories'] // Only these collections will have import/export functionality
       }),
     ],
     secret: process.env.PAYLOAD_SECRET || 'test-secret_key',

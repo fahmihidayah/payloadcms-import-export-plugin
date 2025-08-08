@@ -48,7 +48,7 @@ export const createExport = async (args: CreateExportArgs) => {
       id,
       name: nameArg,
       collectionSlug,
-      debug = false,
+      debug = true,
       drafts,
       exportsCollection,
       fields,
@@ -104,6 +104,7 @@ export const createExport = async (args: CreateExportArgs) => {
     req.payload.logger.info({ message: 'Find arguments:', findArgs })
   }
 
+  console.log("fields : ", collectionConfig.flattenedFields)
   const toCSVFunctions = getCustomFieldFunctions({
     fields: collectionConfig.flattenedFields,
   })
