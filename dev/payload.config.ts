@@ -57,6 +57,8 @@ const buildConfigWithMemoryDB = async () => {
           },
           {
             name : 'categories',
+            label : "Categories",
+            
             type : "relationship", 
             relationTo : "categories",
             hasMany: true
@@ -66,6 +68,7 @@ const buildConfigWithMemoryDB = async () => {
 
       {
           slug : "announcements",
+        
           fields : [
             {
               name : 'title',

@@ -145,6 +145,8 @@ export const importExportPlugin =
           fields: collection.config.fields as FlattenedField[],
         })
 
+       
+
         const possibleKeys = getFlattenedFieldKeys(collection.config.fields as FlattenedField[])
 
         const transformed = docs.map((doc) => {
@@ -162,6 +164,9 @@ export const importExportPlugin =
 
           return row
         })
+        
+        console.log("collection field : ", transformed)
+        
 
         return Response.json({
           docs: transformed,

@@ -33,13 +33,7 @@ export const getCustomFieldFunctions = ({ fields }: Args): Record<string, ToCSVF
       }
     } else if (field.type === 'relationship' || field.type === 'upload') {
       // @ts-expect-error ref is untyped
-      console.log("field type ", field.type, `${ref.prefix}${field.name}`)
-      // @ts-expect-error ref is untyped
-      
       result[`${ref.prefix}${field.name}`] = ({ value }) => {
-
-        console.log("field type ", field.type, value)
-       
         if (value && (typeof value === 'object' || Array.isArray(value))) {
           return JSON.stringify(value)
         }

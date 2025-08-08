@@ -9,7 +9,7 @@ type Args = {
   toCSVFunctions: Record<string, ToCSVFunction>
 }
 
-export const flattenObjectOld = ({
+export const flattenObject = ({
   doc,
   fields,
   prefix,
@@ -107,114 +107,6 @@ export const flattenObjectOld = ({
         } else {
           row[newKey] = value
         }
-      }
-    })
-  }
-
-  flatten(doc, prefix)
-
-  if (Array.isArray(fields) && fields.length > 0) {
-    const orderedResult: Record<string, unknown> = {}
-
-    const fieldToRegex = (field: string): RegExp => {
-      const parts = field.split('.').map((part) => `${part}(?:_\\d+)?`)
-      const pattern = `^${parts.join('_')}`
-      return new RegExp(pattern)
-    }
-
-    fields.forEach((field) => {
-      if (row[field.replace(/\./g, '_')]) {
-        const sanitizedField = field.replace(/\./g, '_')
-        orderedResult[sanitizedField] = row[sanitizedField]
-      } else {
-        const regex = fieldToRegex(field)
-        Object.keys(row).forEach((key) => {
-          if (regex.test(key)) {
-            orderedResult[key] = row[key]
-          }
-        })
-      }
-    })
-
-    return orderedResult
-  }
-
-  return row
-}
-
-export const flattenObject = ({
-  doc,
-  fields,
-  prefix,
-  toCSVFunctions,
-}: Args): Record<string, unknown> => {
-  const row: Record<string, unknown> = {}
-
-  const flatten = (siblingDoc: Document, prefix?: string) => {
-    Object.entries(siblingDoc).forEach(([key, value]) => {
-      const newKey = prefix ? `${prefix}_${key}` : key
-
-      // First check if there's a toCSVFunction for this field
-      if (toCSVFunctions?.[newKey]) {
-        try {
-          const result = toCSVFunctions[newKey]({
-            columnName: newKey,
-            data: row,
-            doc,
-            row,
-            siblingDoc,
-            value,
-          })
-          if (typeof result !== 'undefined') {
-            row[newKey] = result
-          }
-        } catch (error) {
-          throw new Error(
-            `Error in toCSVFunction for field "${newKey}": ${JSON.stringify(value)}\n${(error as Error).message}`,
-          )
-        }
-        return // Skip further processing if handled by toCSVFunction
-      }
-
-      // Handle arrays
-      if (Array.isArray(value)) {
-        value.forEach((item, index) => {
-          if (typeof item === 'object' && item !== null) {
-            // Case: hasMany polymorphic relationships (fallback)
-            if (
-              'relationTo' in item &&
-              'value' in item &&
-              typeof item.value === 'object' &&
-              item.value !== null
-            ) {
-              row[`${newKey}_${index}`] = JSON.stringify(item)
-              return
-            }
-            // Recursively flatten nested objects
-            flatten(item, `${newKey}_${index}`)
-          } else {
-            row[`${newKey}_${index}`] = item
-          }
-        })
-      }
-      // Handle single objects
-      else if (typeof value === 'object' && value !== null) {
-        // Check if it's a relationship object
-        if (
-          'relationTo' in value &&
-          'value' in value &&
-          typeof value.value === 'object' &&
-          value.value !== null
-        ) {
-          row[newKey] = JSON.stringify(value)
-        } else {
-          // Recursively flatten nested objects
-          flatten(value, newKey)
-        }
-      }
-      // Handle primitive values
-      else {
-        row[newKey] = value
       }
     })
   }
